@@ -2,12 +2,20 @@ const express = require('express');
 
 const ServerConfig = require('./Config/ServerConfig');
 const connectDB = require('./Config/dbConfig');
+const userRouter = require('./routes/userRoute');
+const cartRouter = require('./routes/cartRoute');
+// const User = require('./schemas/userSchema');
 
 const app = express();
 
 app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
+
+//Routing middleware
+// if your req route starts with users then handle it using userRouter
+app.use('/users', userRouter); // connects the router to the server
+app.use('/carts', cartRouter); // we can also directly import the router here without storing it in a variable
 
 app.post('/ping', (req, res) => {
     console.log(req.body);
