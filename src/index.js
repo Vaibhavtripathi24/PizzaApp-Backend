@@ -8,6 +8,9 @@ const userRouter = require('./routes/userRoute');
 const cartRouter = require('./routes/cartRoute');
 const authRouter = require('./routes/authRoute');
 const { isLoggedIn } = require('./validation/authValidator');
+const uploader = require('./middlewares/multerMiddleware');
+const cloudinaryConfig = require('./Config/cloudinaryConfig');  
+const fs = require('fs/promises');
 // const User = require('./schemas/userSchema');
 
 const app = express();
@@ -27,6 +30,13 @@ app.get('/ping', isLoggedIn, (req, res) => {
     console.log(req.body);
     console.log(req.cookies);
     return res.json({message: "pong"});
+})
+
+app.post('/photo',uploader.single('incomingFile'), async (req, res) => {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    console.log("result from cloudinary", result);
+    await fs.unlink(req.file.path); //deleting the file from local storage after uploading to cloudinary
+    return res.json({message: "ok"});
 })
 
 app.listen(ServerConfig.PORT, async () => {
