@@ -1,12 +1,17 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
+
 
 const ServerConfig = require('./Config/ServerConfig');
 const connectDB = require('./Config/dbConfig');
 const userRouter = require('./routes/userRoute');
 const cartRouter = require('./routes/cartRoute');
+const authRouter = require('./routes/authRoute');
+const { isLoggedIn } = require('./validation/authValidator');
 // const User = require('./schemas/userSchema');
 
 const app = express();
+app.use(cookieParser());
 
 app.use(express.json());
 app.use(express.text());
@@ -16,9 +21,11 @@ app.use(express.urlencoded({ extended: true }));
 // if your req route starts with users then handle it using userRouter
 app.use('/users', userRouter); // connects the router to the server
 app.use('/carts', cartRouter); // we can also directly import the router here without storing it in a variable
+app.use('/auth', authRouter); // we can also directly import the router here without storing it in a variable
 
-app.post('/ping', (req, res) => {
+app.get('/ping', isLoggedIn, (req, res) => {
     console.log(req.body);
+    console.log(req.cookies);
     return res.json({message: "pong"});
 })
 

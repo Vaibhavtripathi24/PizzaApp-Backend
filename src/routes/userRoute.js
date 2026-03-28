@@ -5,7 +5,7 @@ const { createUser } = require('../controllers/userController');
 //Routers are used for segegating the routes in different files and then we can use them in the main file
 const userRouter = express.Router();
 
-userRouter.post('/:id', createUser);
+userRouter.post('/', createUser);
 //userRouter.get('/', getUser); //this is a route regitration
 
 module.exports = userRouter; //exporting the router to use in the main file
