@@ -1,8 +1,8 @@
 const cloudinary = require('../Config/cloudinaryConfig');
 const ProductRepository = require('../repository/productRepository');
-const fs = require('fs').promises;
 const InternalServerError = require('../utils/internalServerError');
 const NotFoundError = require('../utils/notFoundError');
+const fs = require('fs').promises;
 
 async function createProduct(productDetails) {
     let productImage;
@@ -12,7 +12,8 @@ async function createProduct(productDetails) {
         try {
             const cloudinaryResponse = await cloudinary.uploader.upload(imagePath);
             productImage = cloudinaryResponse.secure_url;
-            await fs.unlink(imagePath);
+            console.log(imagePath);
+            await fs.unlink(process.cwd() +"/" + imagePath);
         } catch (error) {
             console.log(error);
             throw new InternalServerError();
@@ -25,7 +26,7 @@ async function createProduct(productDetails) {
     });
 
     if (!product) {
-        throw new InternalServerError();
+        throw { reason: 'Not able to create Product', statusCode: 500 };
     }
 
     return product;
@@ -33,7 +34,7 @@ async function createProduct(productDetails) {
 async function getProductById(productId) {
     const response = await ProductRepository.getProductById(productId);
     if (!response) {
-        throw new NotFoundError('Product not found');
+        throw new NotFoundErrorError('Product');
     }
     return response;
 }
@@ -41,7 +42,7 @@ async function getProductById(productId) {
 async function deleteProductById(productId) {
     const response = await ProductRepository.deleteProductById(productId);
     if (!response) {
-        throw new NotFoundError('Product not found');
+        throw new NotFoundError('Product');
     }
     return response;
 }
@@ -51,4 +52,4 @@ module.exports = {
     createProduct,
     getProductById,
     deleteProductById
-};
+}
