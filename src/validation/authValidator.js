@@ -11,8 +11,23 @@ async function isLoggedIn(req, res, next) {
             error: { message: "No token provided" }
         });
     }
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded) {
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (!decoded) {
+            return res.status(401).json({
+                message: "Unauthorized: Invalid token",
+                success: false,
+                data: {},
+                error: { message: "Invalid token" }
+            });
+        }
+
+        req.user = {
+            email: decoded.email,
+            id: decoded.id
+        };
+        next();
+    } catch (error) {
         return res.status(401).json({
             message: "Unauthorized: Invalid token",
             success: false,
@@ -20,13 +35,9 @@ async function isLoggedIn(req, res, next) {
             error: { message: "Invalid token" }
         });
     }
-    req.user = {
-        email: decoded.email,
-        id: decoded.id
-    }
-    next(); 
-    }
-    module.exports = {
+}
+
+module.exports = {
     isLoggedIn
 
 }

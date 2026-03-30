@@ -11,6 +11,7 @@ const { isLoggedIn } = require('./validation/authValidator');
 const uploader = require('./middlewares/multerMiddleware');
 const cloudinaryConfig = require('./Config/cloudinaryConfig');  
 const fs = require('fs/promises');
+const productRouter = require('./routes/productRoute');
 // const User = require('./schemas/userSchema');
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/users', userRouter); // connects the router to the server
 app.use('/carts', cartRouter); // we can also directly import the router here without storing it in a variable
 app.use('/auth', authRouter); // we can also directly import the router here without storing it in a variable
+app.use('/products', productRouter);
 
 app.get('/ping', isLoggedIn, (req, res) => {
     console.log(req.body);
@@ -33,7 +35,7 @@ app.get('/ping', isLoggedIn, (req, res) => {
 })
 
 app.post('/photo',uploader.single('incomingFile'), async (req, res) => {
-    const result = await cloudinary.uploader.upload(req.file.path);
+    const result = await cloudinaryConfig.uploader.upload(req.file.path);
     console.log("result from cloudinary", result);
     await fs.unlink(req.file.path); //deleting the file from local storage after uploading to cloudinary
     return res.json({message: "ok"});
