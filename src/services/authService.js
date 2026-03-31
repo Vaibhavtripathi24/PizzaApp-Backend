@@ -2,29 +2,47 @@ const { JWT_SECRET, JWT_EXPIRY } = require("../Config/ServerConfig");
 const { findUser } = require("../repository/userRepository");
 const bcrypt = require('bcrypt');
 const Jwt = require('jsonwebtoken');
+const BadRequestError = require('../utils/badRequesterror');
+const NotFoundError = require('../utils/notFoundError');
+const UnauthorisedError = require('../utils/unauthorisedError');
 
 async function loginUser(authDetails) {
     const email = authDetails.email;
     const plainPassword = authDetails.password;
 
-    //1. check if there is a regitered user with the given email
+    if (!email || !plainPassword) {
+        throw new BadRequestError("Email and password are required");
+    }
+
     const user = await findUser({ email });
     if (!user) {
-        throw {message: "No user found with the given email", statusCode: 404};
-          
+        throw new NotFoundError("No user found with the given email");
     }
-    //2. if there is a user then we will compare the password
+
     const isPasswordValidated = await bcrypt.compare(plainPassword, user.password);
     if (!isPasswordValidated) {
-        throw {message: "Invalid password, please try again", statusCode: 401};
+        throw new UnauthorisedError();
     }
-    //3. if password is correct then we will generate a token and send it to the user
-    // const token = generateToken(user);
-    // return { token, user };
-    const token = Jwt.sign ({ email: user.email, id: user._id }, JWT_SECRET, {expiresIn: JWT_EXPIRY });
-    return token;
+
+    const token = Jwt.sign(
+        { email: user.email, id: user._id, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY }
+    );
+
+    return {
+        token,
+        user: {
+            id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            mobileNumber: user.mobileNumber,
+            role: user.role
+        }
+    };
 
 }  
 module.exports = {
     loginUser
-}  
+}

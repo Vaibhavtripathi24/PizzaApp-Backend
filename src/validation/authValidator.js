@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../Config/ServerConfig');
+const UnauthorisedError = require('../utils/unauthorisedError');
 
 async function isLoggedIn(req, res, next) {
-    const token = req.cookies["authToken"]; // Assuming the token is stored in a cookie named 'authToken'
+    const token = req.cookies.authToken;
     if (!token) {
         return res.status(401).json({
             message: "Unauthorized: No token provided",
@@ -11,22 +12,17 @@ async function isLoggedIn(req, res, next) {
             error: { message: "No token provided" }
         });
     }
+
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        if (!decoded) {
-            return res.status(401).json({
-                message: "Unauthorized: Invalid token",
-                success: false,
-                data: {},
-                error: { message: "Invalid token" }
-            });
-        }
 
         req.user = {
             email: decoded.email,
-            id: decoded.id
+            id: decoded.id,
+            role: decoded.role
         };
-        next();
+
+        return next();
     } catch (error) {
         return res.status(401).json({
             message: "Unauthorized: Invalid token",
@@ -37,7 +33,33 @@ async function isLoggedIn(req, res, next) {
     }
 }
 
-module.exports = {
-    isLoggedIn
+function isAdmin(req, res, next) {
+    const loggedInUser = req.user;
 
+    if (!loggedInUser) {
+        const error = new UnauthorisedError();
+        return res.status(error.statusCode).json({
+            success: false,
+            data: {},
+            message: error.message,
+            error
+        });
+    }
+
+    if (loggedInUser.role === 'ADMIN') {
+        return next();
+    }
+
+    const error = new UnauthorisedError();
+    return res.status(error.statusCode).json({
+        success: false,
+        data: {},
+        message: "Unauthorized: Admin access required",
+        error
+    });
+}
+
+module.exports = {
+    isLoggedIn,
+    isAdmin
 }

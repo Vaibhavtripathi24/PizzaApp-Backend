@@ -32,16 +32,45 @@ app.get('/ping', isLoggedIn, (req, res) => {
     console.log(req.body);
     console.log(req.cookies);
     return res.json({message: "pong"});
-})
+});
 
 app.post('/photo',uploader.single('incomingFile'), async (req, res) => {
-    const result = await cloudinaryConfig.uploader.upload(req.file.path);
-    console.log("result from cloudinary", result);
-    await fs.unlink(req.file.path); //deleting the file from local storage after uploading to cloudinary
-    return res.json({message: "ok"});
-})
+    if (!req.file) {
+        return res.status(400).json({
+            message: 'No file uploaded',
+            success: false,
+            data: {},
+            error: { message: 'incomingFile is required' }
+        });
+    }
 
-app.listen(ServerConfig.PORT, async () => {
-    await connectDB();
-    console.log(`Server started at port ${ServerConfig.PORT}...!!`);
+    try {
+        const result = await cloudinaryConfig.uploader.upload(req.file.path);
+        console.log("result from cloudinary", result);
+        await fs.unlink(req.file.path);
+
+        return res.json({
+            message: "ok",
+            success: true,
+            data: { imageUrl: result.secure_url },
+            error: {}
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Unable to upload photo',
+            success: false,
+            data: {},
+            error: { message: error.message }
+        });
+    }
+});
+
+app.listen(ServerConfig.PORT, () => {
+    connectDB()
+        .then(() => {
+            console.log(`Server started at port ${ServerConfig.PORT}...!!`);
+        })
+        .catch(() => {
+            process.exit(1);
+        });
 });

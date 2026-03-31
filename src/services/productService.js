@@ -2,7 +2,8 @@ const cloudinary = require('../Config/cloudinaryConfig');
 const ProductRepository = require('../repository/productRepository');
 const InternalServerError = require('../utils/internalServerError');
 const NotFoundError = require('../utils/notFoundError');
-const fs = require('fs').promises;
+const fs = require('fs/promises');
+const path = require('path');
 
 async function createProduct(productDetails) {
     let productImage;
@@ -12,21 +13,28 @@ async function createProduct(productDetails) {
         try {
             const cloudinaryResponse = await cloudinary.uploader.upload(imagePath);
             productImage = cloudinaryResponse.secure_url;
-            console.log(imagePath);
-            await fs.unlink(process.cwd() +"/" + imagePath);
         } catch (error) {
             console.log(error);
             throw new InternalServerError();
+        } finally {
+            try {
+                await fs.unlink(path.resolve(imagePath));
+            } catch (unlinkError) {
+                if (unlinkError.code !== 'ENOENT') {
+                    console.log(unlinkError);
+                }
+            }
         }
     }
 
     const product = await ProductRepository.createProduct({
         ...productDetails,
+        imagePath: undefined,
         productImage
     });
 
     if (!product) {
-        throw { reason: 'Not able to create Product', statusCode: 500 };
+        throw new InternalServerError();
     }
 
     return product;
@@ -34,15 +42,20 @@ async function createProduct(productDetails) {
 async function getProductById(productId) {
     const response = await ProductRepository.getProductById(productId);
     if (!response) {
-        throw new NotFoundErrorError('Product');
+        throw new NotFoundError('Product not found');
     }
     return response;
 }
 
 async function deleteProductById(productId) {
+    const existingProduct = await ProductRepository.getProductById(productId);
+    if (!existingProduct) {
+        throw new NotFoundError('Product not found');
+    }
+
     const response = await ProductRepository.deleteProductById(productId);
     if (!response) {
-        throw new NotFoundError('Product');
+        throw new NotFoundError('Product not found');
     }
     return response;
 }

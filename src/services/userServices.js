@@ -1,7 +1,8 @@
 const { findUser, createUser} = require('../repository/userRepository');
+const BadRequestError = require('../utils/badRequesterror');
+const InternalServerError = require('../utils/internalServerError');
 
 async function registerUser(userDetails) {
-    // It will create a brand new user in the db.
     const user = await findUser({
         $or: [
             { email: userDetails.email },
@@ -10,24 +11,22 @@ async function registerUser(userDetails) {
         });
 
         if (user) {
-            throw {
-                reason: 'User with the same email or mobile number already exists',
-                statusCode: 400
-            };
+            throw new BadRequestError('User with the same email or mobile number already exists');
         }
-        // 2. If user is not present then we will create a new user in the db.
+
         const newUser = await createUser({
             email: userDetails.email,
             mobileNumber: userDetails.mobileNumber,
             firstName: userDetails.firstName,
             lastName: userDetails.lastName,
-            password: userDetails.password
+            password: userDetails.password,
+            role: 'CUSTOMER'
         });
 
         if (!newUser) {
-            throw {reason: 'Something went wrong, acnnot create user', statusCode: 500}
+            throw new InternalServerError();
         }
-        // 3. return the details of created user
+
         return newUser;
     }
 

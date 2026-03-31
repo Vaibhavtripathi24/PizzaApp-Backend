@@ -15,6 +15,9 @@ async function createUser(userDetails) {
         const response = await User.create(userDetails);
         return response;
     } catch (error) {
+        if (error.name === 'ValidationError' || error.code === 11000) {
+            error.statusCode = 400;
+        }
         console.log(error);
         throw error;
     }

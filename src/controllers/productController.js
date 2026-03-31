@@ -11,7 +11,7 @@ async function addProduct(req, res) {
             productName: req.body.productName,
             description: req.body.description,
             imagePath: req.file?.path,
-            productPrice: req.body.price,
+            productPrice: req.body.productPrice ?? req.body.price,
             category: req.body.category,
             inStock: req.body.inStock
         });

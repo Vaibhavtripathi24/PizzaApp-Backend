@@ -27,6 +27,9 @@ async function getProductById(productId) {
       return product;
       
     } catch (error) {
+      if (error.name === 'CastError') {
+        throw new BadRequestError('Invalid product id');
+      }
       console.log(error);
       throw new InternalServerError();
     }
@@ -38,6 +41,9 @@ async function getProductById(productId) {
       return response;
 
     } catch (error) {
+      if (error.name === 'CastError') {
+        throw new BadRequestError('Invalid product id');
+      }
       console.log(error);
       throw new InternalServerError();
     }
