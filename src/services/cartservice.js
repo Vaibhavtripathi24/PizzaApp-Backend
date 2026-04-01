@@ -1,4 +1,4 @@
-const { getCartByUserId } = require('../repository/cartRepository');
+const { getCartByUserId, clearCart: clearCartByUserId } = require('../repository/cartRepository');
 const { getProductById } = require('./productService');
 const AppError = require('../utils/appError');
 const BadRequestError = require('../utils/badRequesterror');
@@ -62,8 +62,13 @@ async function modifyCart(userId, productId, shouldAdd = true) {
     return cart;
 }
 
+async function clearCart(userId) {
+    const response = await clearCartByUserId(userId);
+    return response;
+}
 
 module.exports = {
     getCart,
-    modifyCart
+    modifyCart,
+    clearCart
 };

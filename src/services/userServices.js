@@ -1,4 +1,5 @@
 const { findUser, createUser} = require('../repository/userRepository');
+const { createcart } = require('../repository/cartRepository');
 const BadRequestError = require('../utils/badRequesterror');
 const InternalServerError = require('../utils/internalServerError');
 
@@ -26,6 +27,8 @@ async function registerUser(userDetails) {
         if (!newUser) {
             throw new InternalServerError();
         }
+
+        await createcart(newUser._id);
 
         return newUser;
     }
